@@ -21,7 +21,6 @@ def get_aws_bucket():
 
 
 def get_warc_from_s3(bucket,keyname,offset,length,file_dest):
-    end = offset + length - 1
     key = bucket.lookup(keyname)
     end = offset + length - 1
     headers={'Range' : 'bytes={}-{}'.format(offset, end)}

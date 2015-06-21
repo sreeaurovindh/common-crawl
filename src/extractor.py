@@ -11,7 +11,7 @@ actual_s3_url = 'https://aws-publicdatasets.s3.amazonaws.com/'
 index_common_crawl = 'http://index.commoncrawl.org/'
 out_folder_name ='indeed-2015-11'
 out_folder_path = '/home/sree/Projects/common-crawl/data'
-web_page_name = '*.indeed.com'
+web_page_name = 'indeed.com/jobs'
 output_numpage_request = '&output=json&showNumPages=true'
 output_content ='&output=json&page='
 

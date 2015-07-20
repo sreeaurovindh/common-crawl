@@ -10,7 +10,16 @@ Dataset
 
 The dataset used for this project is from the May 2015 crawl of the web (Common Crawl) , which consists of over 159 TB of data with more than 2.05 billion webpages.
 
+Credits
+-------
+
 Idea credits : http://research.microsoft.com/en-us/projects/website_structure_mining/ 
 
-Data Credits : http://commoncrawl.org/ 
- 
+Data Credits : Common Crawl http://commoncrawl.org/ 
+
+Warc Extractor (Forked from here and followed with additions) : https://github.com/lintool/warcbase  
+
+Disclaimer
+---------
+
+The views and opinions expressed in this article are those of the authors and do not necessarily reflect the official policy or work in progress of any company such as microsoft or common crawl. Examples of analysis performed within this article are only examples. They should not be utilized in real-world analytic products as they are based only on very limited and dated open source information.

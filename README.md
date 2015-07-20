@@ -9,5 +9,6 @@ Dataset
 The dataset used for this project is from the May 2015 crawl of the web (Common Crawl) , which consists of over 159 TB of data with more than 2.05 billion webpages.
 
 Idea credits : http://research.microsoft.com/en-us/projects/website_structure_mining/ 
+
 Data Credits : http://commoncrawl.org/ 
  

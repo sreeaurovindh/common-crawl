@@ -1,17 +1,13 @@
 Deducing Structure of the Web
 =============================
 
-The goal of the project is to classify the structure of web pages based on the popularity across the web.  Pages with similar html layouts have similar html componenets. Hence DOM(Document Object Model) path of the leaf nodes approximately describes the visual location of the component in page rendering.
-
-Idea credits : http://research.microsoft.com/en-us/projects/website_structure_mining/ 
-
-Applications
-=============
-The major usage of this output would enable focused crawling of web pages and would help in structed data extraction at a web scale.
-
+The goal of the project is to classify the structure of web pages and aggregate these structures based on frequency and domain information. This project would enable focused crawling of webpages and would help researchers to extract data at a web scale.  Due to enormity and unstructuredness of the dataset, we have planned to use tools from the Hadoop eco-system (Apache Pig with Tez, Apache Hive and HBase).
 
 Dataset 
-======
+-------
 
-The dataset that was used for this project is from the Common Crawl (http://commoncrawl.org/).We used the May 2015 dataset which consists of over 159 TB of data with more than 2.05 billion webpages. 
+The dataset used for this project is from the May 2015 crawl of the web (Common Crawl) , which consists of over 159 TB of data with more than 2.05 billion webpages.
 
+Idea credits : http://research.microsoft.com/en-us/projects/website_structure_mining/ 
+Data Credits : http://commoncrawl.org/ 
+ 

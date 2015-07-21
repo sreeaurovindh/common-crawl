@@ -14,7 +14,7 @@ import org.htmlcleaner.CleanerProperties;
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.PrettyXmlSerializer;
 import org.htmlcleaner.TagNode;
-import org.htmlcleaner.XPatherException;
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -24,72 +24,96 @@ import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.NodeIterator;
 import org.xml.sax.InputSource;
 
+import com.adrianmouat.xpathgen.ChildNumber;
 import com.adrianmouat.xpathgen.XPathGen;
 
 public class HtmlCleanerHelper {
 
 	public static void main(String[] args) {
 		TagNode node;
-		//hardcoding URL
-	    String option_url = "http://www.w3schools.com/html/tryit.asp?filename=tryhtml_basic_document";
-	    //final String NAME_XPATH = "//div[@class='row result']";
-	    
-        
-        HtmlCleaner cleaner = new HtmlCleaner();
-        CleanerProperties props = cleaner.getProperties();
-        props.setAllowHtmlInsideAttributes(true);
-        props.setAllowMultiWordAttributes(true);
-        props.setRecognizeUnicodeChars(true);
-        props.setOmitComments(true);
- 
-        try {
-			
+		// hardcoding URL
+		String option_url = "http://www.w3schools.com/html/tryit.asp?filename=tryhtml_basic_document";
+		HtmlCleaner cleaner = new HtmlCleaner();
+		CleanerProperties props = cleaner.getProperties();
+		props.setAllowHtmlInsideAttributes(true);
+		props.setAllowMultiWordAttributes(true);
+		props.setRecognizeUnicodeChars(true);
+		props.setOmitComments(true);
+		try {
 			URL url = new URL(option_url);
 			URLConnection conn = url.openConnection();
- 
-			
 			InputStream input = conn.getInputStream();
 			InputStreamReader inp = new InputStreamReader(input);
 			node = cleaner.clean(inp);
- 
-			
 			String xmlContent = new PrettyXmlSerializer(props).getAsString(node, "utf-8");
-			//System.out.println(xmlContent);
+			// System.out.println(xmlContent);
 			getXpath(xmlContent);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public static void getXpath(String xml){
-		    try {
-		        DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-		        Document doc = builder.parse(new InputSource(new StringReader(xml)));
+	public static void getXpath(String xml) {
+		try {
+			DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+			Document doc = builder.parse(new InputSource(new StringReader(xml)));
+			DocumentTraversal traversal = (DocumentTraversal) doc;
+			NodeIterator iterator = traversal.createNodeIterator(doc.getDocumentElement(), NodeFilter.SHOW_ELEMENT,
+					null, true);
 
-		        DocumentTraversal traversal = (DocumentTraversal) doc;
+			for (Node n = iterator.nextNode(); n != null; n = iterator.nextNode()) {
+				// System.out.println("Element: " + ((Element) n).getTagName());
+				String tagname = ((Element) n).getTagName();
+				NamedNodeMap map = ((Element) n).getAttributes();
+				if (!(map.getLength() > 0)) {
+					// System.out.println(tagname + " =" +
+					// ((Element)n).getTextContent());
+					//System.out.println(XPathGen.getXPath(n));
+					System.out.println(getXPath(n));
+				} else {
+					/*
+					 * for(int i=0; i<map.getLength(); i++) { Node node =
+					 * map.item(i); System.out.println(node.getNodeName() + "="
+					 * + node.getNodeValue()); }
+					 */
+				}
+			}
 
-		        NodeIterator iterator = traversal.createNodeIterator(
-		          doc.getDocumentElement(), NodeFilter.SHOW_ELEMENT, null, true);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	 public static String getXPath(final Node n) {
+		 
+	        String xpath;
+	        
+	        if (n.getNodeType() == Node.ATTRIBUTE_NODE) {
+	            //Slightly special case for attributes as they are considered to
+	            //have no parent
+	            ((Attr) n).getOwnerElement();
+	            xpath = getXPath(((Attr) n).getOwnerElement())
+	                 + "/@" + n.getNodeName();
+	            
+	        } else if (n.getNodeType() == Node.DOCUMENT_NODE) {
+	            xpath = "/";
+	        } else if (n.getNodeType() == Node.DOCUMENT_TYPE_NODE) {
+	            
+	            throw new IllegalArgumentException(
+	                    "DocumentType nodes cannot be identified with XPath");
+	            
+	        } else if (n.getParentNode().getNodeType() == Node.DOCUMENT_NODE) {
+	            
+	            ChildNumber cn = new ChildNumber(n);
+	            xpath = "/node()[" + cn.getXPath() + "]"; 
+	            
+	        } else {
 
-		        for (Node n = iterator.nextNode(); n != null; n = iterator.nextNode()) {
-		            //System.out.println("Element: " + ((Element) n).getTagName());
-		            String tagname = ((Element) n).getTagName();
+	            ChildNumber cn = new ChildNumber(n);
 
-		            NamedNodeMap map = ((Element)n).getAttributes();
-		            if(map.getLength() > 0) {
-		                /*for(int i=0; i<map.getLength(); i++) {
-		                    Node node = map.item(i);
-		                    System.out.println(node.getNodeName() + "=" + node.getNodeValue());
-		                }*/
-		            }
-		            else {
-		                //System.out.println(tagname + " =" + ((Element)n).getTextContent());
-		                System.out.println(XPathGen.getXPath(n));
-		            }
-		        }
-
-		    } catch (Exception e) {
-		        e.printStackTrace();
-		    }
-		    }
+	            xpath = getXPath(n.getParentNode()) 
+	                + "/node()[" + cn.getXPath() + "]";
+	        }
+	        
+	        return xpath;
+	    }
 }

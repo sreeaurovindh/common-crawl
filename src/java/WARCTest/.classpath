@@ -2,9 +2,7 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5"/>
-	<classpathentry kind="lib" path="C:/Users/Pramodh/Desktop/jwat-warc-0.9.1.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Pramodh/Desktop/jwat-archive-common-1.0.3.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Pramodh/Desktop/jwat-common-1.0.3.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Pramodh/Desktop/jwat-gzip-1.0.3.jar"/>
+	<classpathentry kind="lib" path="C:/Users/dselaman/Downloads/htmlcleaner-2.6.1.jar/htmlcleaner-2.6.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/dselaman/Downloads/htmlcleaner-2.6.1.jar/xpathgen.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -33,6 +34,8 @@ import org.warcbase.mapreduce.WacWarcInputFormat;
 
 import com.google.common.collect.Lists;
 
+import edu.asu.html.cleaner.HtmlCleanerHelper;
+
 public class WarcLoader extends FileInputLoadFunc implements LoadMetadata {
   private static final Logger LOG = Logger.getLogger(WarcLoader.class);
 
@@ -54,7 +57,10 @@ public class WarcLoader extends FileInputLoadFunc implements LoadMetadata {
     try {
       WARCRecord record;
       ArchiveRecordHeader header;
-
+      /*LOG.info("LOGGING INFO MESSAGE:::::::::::::::::::::::::::::::::::::::::::");
+      LOG.debug("DEBUG MESSAGE ::::::::::::::::::::::::::::::::::::::::::::::");
+      System.out.println("DEBUGGING LOGS FROM GET NEXT OTPUTLLF>S>");
+      System.err.println("ERROR APPA LOGS FROM GET NEXT OTPUTLLF>S>");*/
       // We're going to continue reading WARC records from the underlying input format
       // until we reach a "response" record.
       while (true) {
@@ -92,7 +98,10 @@ public class WarcLoader extends FileInputLoadFunc implements LoadMetadata {
       } catch (ParseException e) {
         LOG.error("Encountered ParseException ingesting " + url);
       }
-    
+      ArrayList<String> xPathTags = HtmlCleanerHelper.cleanHtml(new String(content));
+      for(String s:xPathTags){
+    	  LOG.info(s);
+      }
       List<Object> protoTuple = Lists.newArrayList();
       protoTuple.add(url);
       protoTuple.add(date);

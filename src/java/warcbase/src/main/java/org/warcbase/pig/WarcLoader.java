@@ -5,6 +5,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -19,12 +20,17 @@ import org.apache.pig.LoadMetadata;
 import org.apache.pig.PigException;
 import org.apache.pig.ResourceSchema;
 import org.apache.pig.ResourceStatistics;
+import org.apache.pig.ResourceSchema.ResourceFieldSchema;
 import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.PigSplit;
+import org.apache.pig.data.BagFactory;
+import org.apache.pig.data.DataBag;
 import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.DataType;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.data.TupleFactory;
+import org.apache.pig.impl.logicalLayer.schema.Schema;
+import org.apache.pig.impl.logicalLayer.schema.Schema.FieldSchema;
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.io.warc.WARCRecord;
 import org.archive.util.ArchiveUtils;
@@ -40,6 +46,7 @@ public class WarcLoader extends FileInputLoadFunc implements LoadMetadata {
   private static final Logger LOG = Logger.getLogger(WarcLoader.class);
 
   private static final TupleFactory TUPLE_FACTORY = TupleFactory.getInstance();
+  private static final BagFactory BAG_FACTORY = BagFactory.getInstance();
   private static final DateFormat ISO8601 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX");
 
   private RecordReader<LongWritable, WarcRecordWritable> in;
@@ -98,15 +105,21 @@ public class WarcLoader extends FileInputLoadFunc implements LoadMetadata {
       } catch (ParseException e) {
         LOG.error("Encountered ParseException ingesting " + url);
       }
+      
+      DataBag leafPaths = BAG_FACTORY.newDefaultBag();
+      
+      
       ArrayList<String> xPathTags = HtmlCleanerHelper.cleanHtml(new String(content));
-      for(String s:xPathTags){
-    	  LOG.info(s);
+      for(String xpathLeafElement:xPathTags){
+    	  leafPaths.add(TUPLE_FACTORY.newTupleNoCopy(Arrays.asList(xpathLeafElement)));
+    	  LOG.info(xpathLeafElement);
       }
       List<Object> protoTuple = Lists.newArrayList();
       protoTuple.add(url);
       protoTuple.add(date);
       protoTuple.add(type);
       protoTuple.add(new DataByteArray(content));
+      protoTuple.add(leafPaths);
 
       return TUPLE_FACTORY.newTupleNoCopy(protoTuple);
     } catch (InterruptedException e) {
@@ -135,22 +148,42 @@ public class WarcLoader extends FileInputLoadFunc implements LoadMetadata {
 
   @Override
   public ResourceSchema getSchema(String location, Job job) throws IOException {
-    // Schema is (url:chararray, date:chararray, mime:chararray, content:bytearray)
-    ResourceSchema schema = new ResourceSchema();
+	// Schema is (url:chararray, date:chararray, mime:chararray, content:bytearray, leafpaths {t:})
+ 
+	  Schema schema = new Schema();
+	  schema.add(new FieldSchema("url",DataType.CHARARRAY));
+	  schema.add(new FieldSchema("date",DataType.CHARARRAY));
+	  schema.add(new FieldSchema("mime",DataType.CHARARRAY));
+	  schema.add(new FieldSchema("content",DataType.BYTEARRAY));
+	  
+	  //Wrapping Tuples in a bag
+	  Schema pathToLeaf = new Schema();
+	  pathToLeaf.add(new FieldSchema("xpath",DataType.CHARARRAY));
+	  Schema pathToLeafWrapper = new Schema(new FieldSchema("t",pathToLeaf));
+	  pathToLeafWrapper.setTwoLevelAccessRequired(true);
+	  schema.add(new FieldSchema("leafpaths",pathToLeafWrapper,DataType.BAG));
+	  
 
-    ResourceSchema.ResourceFieldSchema[] fields = new ResourceSchema.ResourceFieldSchema[4];
-    fields[0] = new ResourceSchema.ResourceFieldSchema();
-    fields[0].setName("url").setType(DataType.CHARARRAY);
-    fields[1] = new ResourceSchema.ResourceFieldSchema();
-    fields[1].setName("date").setType(DataType.CHARARRAY);
-    fields[2] = new ResourceSchema.ResourceFieldSchema();
-    fields[2].setName("mime").setType(DataType.CHARARRAY);
-    fields[3] = new ResourceSchema.ResourceFieldSchema();
-    fields[3].setName("content").setType(DataType.BYTEARRAY);
+	  
+//	  // Schema is (url:chararray, date:chararray, mime:chararray, content:bytearray)
+//    ResourceSchema schema = new ResourceSchema();
+//
+//    ResourceSchema.ResourceFieldSchema[] fields = new ResourceSchema.ResourceFieldSchema[4];
+//    fields[0] = new ResourceSchema.ResourceFieldSchema();
+//    fields[0].setName("url").setType(DataType.CHARARRAY);
+//    fields[1] = new ResourceSchema.ResourceFieldSchema();
+//    fields[1].setName("date").setType(DataType.CHARARRAY);
+//    fields[2] = new ResourceSchema.ResourceFieldSchema();
+//    fields[2].setName("mime").setType(DataType.CHARARRAY);
+//    fields[3] = new ResourceSchema.ResourceFieldSchema();
+//    fields[3].setName("content").setType(DataType.BYTEARRAY);
+//    
+//    
+//    
+//
+//    schema.setFields(fields);
 
-    schema.setFields(fields);
-
-    return schema;
+    return 	new ResourceSchema(schema);
   }
 
   @Override

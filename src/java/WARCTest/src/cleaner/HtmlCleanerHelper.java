@@ -19,6 +19,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.w3c.dom.traversal.DocumentTraversal;
 import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.NodeIterator;
@@ -32,7 +33,7 @@ public class HtmlCleanerHelper {
 	public static void main(String[] args) {
 		TagNode node;
 		// hardcoding URL
-		String option_url = "http://www.w3schools.com/html/tryit.asp?filename=tryhtml_basic_document";
+		String option_url = "https://www.google.com";
 		HtmlCleaner cleaner = new HtmlCleaner();
 		CleanerProperties props = cleaner.getProperties();
 		props.setAllowHtmlInsideAttributes(true);
@@ -46,7 +47,7 @@ public class HtmlCleanerHelper {
 			InputStreamReader inp = new InputStreamReader(input);
 			node = cleaner.clean(inp);
 			String xmlContent = new PrettyXmlSerializer(props).getAsString(node, "utf-8");
-			// System.out.println(xmlContent);
+			//System.out.println(xmlContent);
 			getXpath(xmlContent);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -62,20 +63,9 @@ public class HtmlCleanerHelper {
 					null, true);
 
 			for (Node n = iterator.nextNode(); n != null; n = iterator.nextNode()) {
-				// System.out.println("Element: " + ((Element) n).getTagName());
-				String tagname = ((Element) n).getTagName();
-				NamedNodeMap map = ((Element) n).getAttributes();
-				if (!(map.getLength() > 0)) {
-					// System.out.println(tagname + " =" +
-					// ((Element)n).getTextContent());
-					//System.out.println(XPathGen.getXPath(n));
+				NodeList children = ((Element) n).getChildNodes();
+				if(children.getLength()<=1){
 					System.out.println(getXPath(n));
-				} else {
-					/*
-					 * for(int i=0; i<map.getLength(); i++) { Node node =
-					 * map.item(i); System.out.println(node.getNodeName() + "="
-					 * + node.getNodeValue()); }
-					 */
 				}
 			}
 
@@ -104,14 +94,14 @@ public class HtmlCleanerHelper {
 	        } else if (n.getParentNode().getNodeType() == Node.DOCUMENT_NODE) {
 	            
 	            ChildNumber cn = new ChildNumber(n);
-	            xpath = "/node()[" + cn.getXPath() + "]"; 
-	            
+	            //xpath = "/node()[" + cn.getXPath() + "]"; 
+	            xpath = "/" + n.getNodeName();
 	        } else {
 
 	            ChildNumber cn = new ChildNumber(n);
 
-	            xpath = getXPath(n.getParentNode()) 
-	                + "/node()[" + cn.getXPath() + "]";
+	            //xpath = getXPath(n.getParentNode()) + "/node()[" + cn.getXPath() + "]";
+	            xpath = getXPath(n.getParentNode()) + "/" + n.getNodeName();
 	        }
 	        
 	        return xpath;

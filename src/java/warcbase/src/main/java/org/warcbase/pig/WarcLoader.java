@@ -43,155 +43,170 @@ import com.google.common.collect.Lists;
 import edu.asu.html.cleaner.HtmlCleanerHelper;
 
 public class WarcLoader extends FileInputLoadFunc implements LoadMetadata {
-  private static final Logger LOG = Logger.getLogger(WarcLoader.class);
+	private static final Logger LOG = Logger.getLogger(WarcLoader.class);
 
-  private static final TupleFactory TUPLE_FACTORY = TupleFactory.getInstance();
-  private static final BagFactory BAG_FACTORY = BagFactory.getInstance();
-  private static final DateFormat ISO8601 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX");
+	private static final TupleFactory TUPLE_FACTORY = TupleFactory
+			.getInstance();
+	private static final BagFactory BAG_FACTORY = BagFactory.getInstance();
+	private static final DateFormat ISO8601 = new SimpleDateFormat(
+			"yyyy-MM-dd'T'HH:mm:ssX");
 
-  private RecordReader<LongWritable, WarcRecordWritable> in;
+	private RecordReader<LongWritable, WarcRecordWritable> in;
 
-  public WarcLoader() {
-  }
+	public WarcLoader() {
+	}
 
-  @Override
-  public WacWarcInputFormat getInputFormat() throws IOException {
-    return new WacWarcInputFormat();
-  }
+	@Override
+	public WacWarcInputFormat getInputFormat() throws IOException {
+		return new WacWarcInputFormat();
+	}
 
-  @Override
-  public Tuple getNext() throws IOException {
-    try {
-      WARCRecord record;
-      ArchiveRecordHeader header;
-      /*LOG.info("LOGGING INFO MESSAGE:::::::::::::::::::::::::::::::::::::::::::");
-      LOG.debug("DEBUG MESSAGE ::::::::::::::::::::::::::::::::::::::::::::::");
-      System.out.println("DEBUGGING LOGS FROM GET NEXT OTPUTLLF>S>");
-      System.err.println("ERROR APPA LOGS FROM GET NEXT OTPUTLLF>S>");*/
-      // We're going to continue reading WARC records from the underlying input format
-      // until we reach a "response" record.
-      while (true) {
-        if (!in.nextKeyValue()) {
-          return null;
-        }
+	@Override
+	public Tuple getNext() throws IOException {
+		try {
+			WARCRecord record;
+			ArchiveRecordHeader header;
+			/*
+			 * LOG.info(
+			 * "LOGGING INFO MESSAGE:::::::::::::::::::::::::::::::::::::::::::"
+			 * ); LOG.debug(
+			 * "DEBUG MESSAGE ::::::::::::::::::::::::::::::::::::::::::::::");
+			 * System.out.println("DEBUGGING LOGS FROM GET NEXT OTPUTLLF>S>");
+			 * System.err.println("ERROR APPA LOGS FROM GET NEXT OTPUTLLF>S>");
+			 */
+			// We're going to continue reading WARC records from the underlying
+			// input format
+			// until we reach a "response" record.
+			while (true) {
+				if (!in.nextKeyValue()) {
+					return null;
+				}
 
-        record = (WARCRecord) in.getCurrentValue().getRecord();
-        header = record.getHeader();
+				record = (WARCRecord) in.getCurrentValue().getRecord();
+				header = record.getHeader();
 
-        if (header.getHeaderValue("WARC-Type").equals("response")) {
-          break;
-        }
-      }
+				if (header.getHeaderValue("WARC-Type").equals("response")) {
+					break;
+				}
+			}
 
-      String url = header.getUrl();
-      byte[] content = null;
-      String type = null;
+			String url = header.getUrl();
+			byte[] content = null;
+			String type = null;
 
-      try {
-        content = WarcRecordUtils.getContent(record);
-        type = WarcRecordUtils.getWarcResponseMimeType(content);
-      } catch (OutOfMemoryError e) {
-        // When we get a corrupt record, this will happen...
-        // Try to recover and move on...
-        LOG.error("Encountered OutOfMemoryError ingesting " + url);
-        LOG.error("Attempting to continue...");
-      }
+			try {
+				content = WarcRecordUtils.getContent(record);
+				type = WarcRecordUtils.getWarcResponseMimeType(content);
+			} catch (OutOfMemoryError e) {
+				// When we get a corrupt record, this will happen...
+				// Try to recover and move on...
+				LOG.error("Encountered OutOfMemoryError ingesting " + url);
+				LOG.error("Attempting to continue...");
+			}
 
-      Date d = null;
-      String date = null;
-      try {
-        d = ISO8601.parse(header.getDate());
-        date = ArchiveUtils.get14DigitDate(d);
-      } catch (ParseException e) {
-        LOG.error("Encountered ParseException ingesting " + url);
-      }
-      
-      DataBag leafPaths = BAG_FACTORY.newDefaultBag();
-      //TODO : Have to filter based on mime
-      
-      ArrayList<String> xPathTags = HtmlCleanerHelper.cleanHtml(new String(content));
-      for(String xpathLeafElement:xPathTags){
-    	  leafPaths.add(TUPLE_FACTORY.newTupleNoCopy(Arrays.asList(xpathLeafElement)));
-    	 
-      }
-      List<Object> protoTuple = Lists.newArrayList();
-      protoTuple.add(url);
-      protoTuple.add(date);
-      protoTuple.add(type);
-      protoTuple.add(new DataByteArray(content));
-      protoTuple.add(leafPaths);
+			Date d = null;
+			String date = null;
+			try {
+				d = ISO8601.parse(header.getDate());
+				date = ArchiveUtils.get14DigitDate(d);
+			} catch (ParseException e) {
+				LOG.error("Encountered ParseException ingesting " + url);
+			}
 
-      return TUPLE_FACTORY.newTupleNoCopy(protoTuple);
-    } catch (InterruptedException e) {
-      int errCode = 6018;
-      String errMsg = "Error while reading input";
-      throw new ExecException(errMsg, errCode, PigException.REMOTE_ENVIRONMENT, e);
-    }
-  }
+			DataBag leafPaths = BAG_FACTORY.newDefaultBag();
+			// TODO : Have to filter based on mime
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
-  @Override
-  public void prepareToRead(RecordReader reader, PigSplit split) {
-    in = reader;
-  }
+			if (type!=null && type.contains("text/html")) {
+				ArrayList<String> xPathTags = HtmlCleanerHelper
+						.cleanHtml(new String(content));
+				for (String xpathLeafElement : xPathTags) {
+					leafPaths.add(TUPLE_FACTORY.newTupleNoCopy(Arrays
+							.asList(xpathLeafElement)));
 
-  @Override
-  public void setLocation(String location, Job job) throws IOException {
-    FileInputFormat.setInputPaths(job, location);
-  }
+				}
+			}
+			List<Object> protoTuple = Lists.newArrayList();
+			protoTuple.add(url);
+			protoTuple.add(date);
+			protoTuple.add(type);
 
+			protoTuple.add(leafPaths);
 
-  @Override
-  public String[] getPartitionKeys(String location, Job job) throws IOException {
-    return null;
-  }
+			return TUPLE_FACTORY.newTupleNoCopy(protoTuple);
+		} catch (InterruptedException e) {
+			int errCode = 6018;
+			String errMsg = "Error while reading input";
+			throw new ExecException(errMsg, errCode,
+					PigException.REMOTE_ENVIRONMENT, e);
+		}
+	}
 
-  @Override
-  public ResourceSchema getSchema(String location, Job job) throws IOException {
-	// Schema is (url:chararray, date:chararray, mime:chararray, content:bytearray, leafpaths {t:})
- 
-	  Schema schema = new Schema();
-	  schema.add(new FieldSchema("url",DataType.CHARARRAY));
-	  schema.add(new FieldSchema("date",DataType.CHARARRAY));
-	  schema.add(new FieldSchema("mime",DataType.CHARARRAY));
-	  schema.add(new FieldSchema("content",DataType.BYTEARRAY));
-	  
-	  //Wrapping Tuples in a bag
-	  Schema pathToLeaf = new Schema();
-	  pathToLeaf.add(new FieldSchema("xpath",DataType.CHARARRAY));
-	  Schema pathToLeafWrapper = new Schema(new FieldSchema("t",pathToLeaf));
-	  pathToLeafWrapper.setTwoLevelAccessRequired(true);
-	  schema.add(new FieldSchema("leafpaths",pathToLeafWrapper,DataType.BAG));
-	  
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Override
+	public void prepareToRead(RecordReader reader, PigSplit split) {
+		in = reader;
+	}
 
-	  
-//	  // Schema is (url:chararray, date:chararray, mime:chararray, content:bytearray)
-//    ResourceSchema schema = new ResourceSchema();
-//
-//    ResourceSchema.ResourceFieldSchema[] fields = new ResourceSchema.ResourceFieldSchema[4];
-//    fields[0] = new ResourceSchema.ResourceFieldSchema();
-//    fields[0].setName("url").setType(DataType.CHARARRAY);
-//    fields[1] = new ResourceSchema.ResourceFieldSchema();
-//    fields[1].setName("date").setType(DataType.CHARARRAY);
-//    fields[2] = new ResourceSchema.ResourceFieldSchema();
-//    fields[2].setName("mime").setType(DataType.CHARARRAY);
-//    fields[3] = new ResourceSchema.ResourceFieldSchema();
-//    fields[3].setName("content").setType(DataType.BYTEARRAY);
-//    
-//    
-//    
-//
-//    schema.setFields(fields);
+	@Override
+	public void setLocation(String location, Job job) throws IOException {
+		FileInputFormat.setInputPaths(job, location);
+	}
 
-    return 	new ResourceSchema(schema);
-  }
+	@Override
+	public String[] getPartitionKeys(String location, Job job)
+			throws IOException {
+		return null;
+	}
 
-  @Override
-  public ResourceStatistics getStatistics(String location, Job job) throws IOException {
-    return null;
-  }
+	@Override
+	public ResourceSchema getSchema(String location, Job job)
+			throws IOException {
+		// Schema is (url:chararray, date:chararray, mime:chararray,
+		// content:bytearray, leafpaths {t:})
 
-  @Override
-  public void setPartitionFilter(Expression partitionFilter) throws IOException {
-  }
+		Schema schema = new Schema();
+		schema.add(new FieldSchema("url", DataType.CHARARRAY));
+		schema.add(new FieldSchema("date", DataType.CHARARRAY));
+		schema.add(new FieldSchema("mime", DataType.CHARARRAY));
+
+		// Wrapping Tuples in a bag
+		Schema pathToLeaf = new Schema();
+		pathToLeaf.add(new FieldSchema("xpath", DataType.CHARARRAY));
+		Schema pathToLeafWrapper = new Schema(new FieldSchema("t", pathToLeaf));
+		pathToLeafWrapper.setTwoLevelAccessRequired(true);
+		schema.add(new FieldSchema("leafpaths", pathToLeafWrapper, DataType.BAG));
+
+		// // Schema is (url:chararray, date:chararray, mime:chararray,
+		// content:bytearray)
+		// ResourceSchema schema = new ResourceSchema();
+		//
+		// ResourceSchema.ResourceFieldSchema[] fields = new
+		// ResourceSchema.ResourceFieldSchema[4];
+		// fields[0] = new ResourceSchema.ResourceFieldSchema();
+		// fields[0].setName("url").setType(DataType.CHARARRAY);
+		// fields[1] = new ResourceSchema.ResourceFieldSchema();
+		// fields[1].setName("date").setType(DataType.CHARARRAY);
+		// fields[2] = new ResourceSchema.ResourceFieldSchema();
+		// fields[2].setName("mime").setType(DataType.CHARARRAY);
+		// fields[3] = new ResourceSchema.ResourceFieldSchema();
+		// fields[3].setName("content").setType(DataType.BYTEARRAY);
+		//
+		//
+		//
+		//
+		// schema.setFields(fields);
+
+		return new ResourceSchema(schema);
+	}
+
+	@Override
+	public ResourceStatistics getStatistics(String location, Job job)
+			throws IOException {
+		return null;
+	}
+
+	@Override
+	public void setPartitionFilter(Expression partitionFilter)
+			throws IOException {
+	}
 }

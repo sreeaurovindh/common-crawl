@@ -246,6 +246,6 @@
 	<classpathentry kind="var" path="M2_REPO/net/sourceforge/nekohtml/nekohtml/1.9.20/nekohtml-1.9.20.jar"/>
 	<classpathentry kind="var" path="M2_REPO/net/sourceforge/htmlcleaner/htmlcleaner/2.6.1/htmlcleaner-2.6.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/jdom/jdom2/2.0.5/jdom2-2.0.5.jar"/>
-	<classpathentry kind="lib" path="C:/Program Files/Java/jdk1.8.0_31/lib/tools.jar"/>
+	<classpathentry kind="lib" path="/usr/lib/jvm/java-8-oracle/lib/tools.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

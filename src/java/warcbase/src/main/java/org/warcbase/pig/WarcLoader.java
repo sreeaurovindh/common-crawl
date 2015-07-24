@@ -107,12 +107,12 @@ public class WarcLoader extends FileInputLoadFunc implements LoadMetadata {
       }
       
       DataBag leafPaths = BAG_FACTORY.newDefaultBag();
-      
+      //TODO : Have to filter based on mime
       
       ArrayList<String> xPathTags = HtmlCleanerHelper.cleanHtml(new String(content));
       for(String xpathLeafElement:xPathTags){
     	  leafPaths.add(TUPLE_FACTORY.newTupleNoCopy(Arrays.asList(xpathLeafElement)));
-    	  LOG.info(xpathLeafElement);
+    	 
       }
       List<Object> protoTuple = Lists.newArrayList();
       protoTuple.add(url);

@@ -3,7 +3,12 @@ package edu.asu.html.cleaner;
  
 import java.io.StringReader;
 import java.util.ArrayList;
- 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -14,14 +19,14 @@ import org.htmlcleaner.TagNode;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.w3c.dom.traversal.DocumentTraversal;
 import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.NodeIterator;
 import org.xml.sax.InputSource;
 
-import com.adrianmouat.xpathgen.ChildNumber;
+ 
 
 
 public class HtmlCleanerHelper {
@@ -327,13 +332,15 @@ public class HtmlCleanerHelper {
 	                "\t</body>\n" +
 	                "<!-- Cached/compressed 20140418053901 -->\n" +
 	                "</html>";
-		System.out.println(cleanHtml(sample));
+		 cleanHtml(sample);
 		
 		
 		
 	}
-	
+ 
 	public static ArrayList<String> cleanHtml(String rawHtmlFile){
+		HashSet<String> visualElements = new HashSet<String>(
+			    Arrays.asList("a","area","map","track" ,"audio","embed","select","applet", "button","canvas","embed","figure","frame","iframe","img","input","li","menu","menuitem","meta","optgroup","progress","td","th","textarea","ul","video"));
 		
 		int begin = rawHtmlFile.indexOf("<html");
 		String onlyHtml = rawHtmlFile.substring(begin);
@@ -346,18 +353,40 @@ public class HtmlCleanerHelper {
 		props.setRecognizeUnicodeChars(true);
 		props.setOmitComments(true);
 		ArrayList<String> xPaths = new ArrayList<String>();
+		ArrayList<String> selectedElements = new ArrayList<String>();
 		try {
 			node = cleaner.clean(onlyHtml);
 			String xmlContent = new PrettyXmlSerializer(props).getAsString(node, "utf-8");
-			xPaths = getXpath(xmlContent);
+			xPaths = getXpathElements(xmlContent);
+			
+			//remove duplicates if any
+			 Set<String> setItems = new LinkedHashSet<String>(xPaths);
+			 xPaths.clear();
+			 xPaths.addAll(setItems);
+			
+			 Iterator<String> xPathItr = xPaths.iterator();
+			 while(xPathItr.hasNext()){
+				 String singleXPath = xPathItr.next();
+				 int beginIndex = singleXPath.lastIndexOf("/");
+				 if(beginIndex!= -1){
+					 String element = singleXPath.substring(beginIndex+1);
+					 if(visualElements.contains(element)){
+						 selectedElements.add(singleXPath);
+					 }					 
+				 }
+			 }
+			 
+			 
 			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return xPaths;
+		return selectedElements;
 	}
 	
-	public static ArrayList<String> getXpath(String xml) {
+	
+	
+	public static ArrayList<String> getXpathElements(String xml) {
 		ArrayList<String> xPathNodes = new ArrayList<String>();
 		try {
 			DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -367,10 +396,8 @@ public class HtmlCleanerHelper {
 					null, true);
 
 			for (Node n = iterator.nextNode(); n != null; n = iterator.nextNode()) {
-				// System.out.println("Element: " + ((Element) n).getTagName());
-				String tagname = ((Element) n).getTagName();
-				NamedNodeMap map = ((Element) n).getAttributes();
-				if (!(map.getLength() > 0)) {
+				NodeList children = ((Element)n).getChildNodes();
+				if ( children.getLength() <=1) {
 					xPathNodes.add(getXPath(n));
 				}  
 			}
@@ -399,17 +426,8 @@ public class HtmlCleanerHelper {
                     "DocumentType nodes cannot be identified with XPath");
             
         } else if (n.getParentNode().getNodeType() == Node.DOCUMENT_NODE) {
-            
-            ChildNumber cn = new ChildNumber(n);
-            //xpath = "/node()[" + cn.getXPath() + "]";
             xpath = "/"+n.getNodeName();
-            
-            
         } else {
-
-            ChildNumber cn = new ChildNumber(n);
-
-            //xpath = getXPath(n.getParentNode()) + "/node()[" + cn.getXPath() + "]";
             xpath = getXPath(n.getParentNode()) + "/" + n.getNodeName();
         }
         

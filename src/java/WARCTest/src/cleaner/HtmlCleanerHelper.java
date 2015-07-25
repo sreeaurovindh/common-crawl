@@ -35,6 +35,7 @@ import org.xml.sax.InputSource;
 
 public class HtmlCleanerHelper {
 
+	@SuppressWarnings("unchecked")
 	public static void main(String[] args) {
 		TagNode node;
 		// path config
@@ -46,6 +47,7 @@ public class HtmlCleanerHelper {
 				"img", "input", "li", "menu", "menuitem", "meta", "optgroup",
 				"progress", "td", "th", "textarea", "ul", "video"));
 		ArrayList<String> selectedElements = new ArrayList<String>();
+		ArrayList<String> prevElement = new ArrayList<String>();
 		try {
 			PrintWriter writer = new PrintWriter("/home/dilip/common-crawl-data/resultXpaths.txt", "UTF-8");
 			for (String line : Files.readAllLines(Paths.get("/home/dilip/common-crawl-data/indexes/html_index.txt"))) {
@@ -94,6 +96,18 @@ public class HtmlCleanerHelper {
 						}
 						result.setLength(result.length() - 1);
 						result.append("}");
+						if(!prevElement.isEmpty()){
+							HashSet<String> s1 = new HashSet<String>(prevElement);
+							HashSet<String> s2 = new HashSet<String>(selectedElements);
+							s1.removeAll(s2);
+							Iterator<String> itr = s1.iterator();
+							StringBuilder diffPaths = new StringBuilder();
+							while(itr.hasNext()){
+								diffPaths.append(","+itr.next());
+							}
+							System.out.println("Difference::"+diffPaths.toString());
+						}
+						prevElement = (ArrayList<String>) selectedElements.clone();
 						selectedElements.clear();
 						System.out.println(result);
 						writer.println(result.toString());

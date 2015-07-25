@@ -31,7 +31,7 @@ import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.NodeIterator;
 import org.xml.sax.InputSource;
 
-import com.adrianmouat.xpathgen.ChildNumber;
+
 
 public class HtmlCleanerHelper {
 

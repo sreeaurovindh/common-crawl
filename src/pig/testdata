@@ -1,0 +1,6 @@
+a	{(/html/head/a),(/html/b)}
+a	{(/html/c)}
+a	{(/html/a)}
+b	{(/html/c)}
+b	{(/html/a),(/html/b)}
+b	{(/html/a),(/html/b)}

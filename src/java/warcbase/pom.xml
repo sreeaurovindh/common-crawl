@@ -454,5 +454,10 @@
     	<artifactId>jaxp-api</artifactId>
     	<version>1.4.5</version>
     </dependency>
+    <dependency>
+  <groupId>com.linkedin.datafu</groupId>
+  <artifactId>datafu</artifactId>
+  <version>1.2.0</version>
+</dependency>
   </dependencies>
 </project>

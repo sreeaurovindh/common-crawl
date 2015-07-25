@@ -1,15 +1,18 @@
 package cleaner;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.io.StringReader;
-import java.net.URL;
-import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -34,12 +37,18 @@ public class HtmlCleanerHelper {
 
 	public static void main(String[] args) {
 		TagNode node;
-
 		// path config
-		String dataUrl = "/home/dilip/common-crawl-data/data/";
+		String dataUrl = "/home/dilip/common-crawl-data/";
 		List<String> xpaths = new ArrayList<String>();
+		HashSet<String> visualElements = new HashSet<String>(Arrays.asList("a",
+				"area", "map", "track", "audio", "embed", "select", "applet",
+				"button", "canvas", "embed", "figure", "frame", "iframe",
+				"img", "input", "li", "menu", "menuitem", "meta", "optgroup",
+				"progress", "td", "th", "textarea", "ul", "video"));
+		ArrayList<String> selectedElements = new ArrayList<String>();
 		try {
-			for (String line : Files.readAllLines(Paths.get("/home/dilip/common-crawl-data/sampleFile"))) {
+			PrintWriter writer = new PrintWriter("/home/dilip/common-crawl-data/resultXpaths.txt", "UTF-8");
+			for (String line : Files.readAllLines(Paths.get("/home/dilip/common-crawl-data/indexes/html_index.txt"))) {
 				for (String part : line.split(",")) {
 					
 					if (part.contains("html")) {
@@ -58,22 +67,42 @@ public class HtmlCleanerHelper {
 						String xmlContent = new PrettyXmlSerializer(props).getAsString(node, "utf-8");
 						//System.out.println(xmlContent);
 						xpaths = getXpath(xmlContent);
+						Set<String> setItems = new LinkedHashSet<String>(xpaths);
+						xpaths.clear();
+						xpaths.addAll(setItems);
+						
+						//remove all duplicate xpaths
+						Iterator<String> xPathItr = xpaths.iterator();
+						while (xPathItr.hasNext()) {
+							String singleXPath = xPathItr.next();
+							int beginIndex = singleXPath.lastIndexOf("/");
+							if (beginIndex != -1) {
+								String element = singleXPath.substring(beginIndex + 1);
+								if (visualElements.contains(element)) {
+									selectedElements.add(singleXPath);
+								}
+							}
+						}
 
 					} else if (part.contains("http")) {
+						Collections.sort(selectedElements);
 						StringBuilder result = new StringBuilder();
 						result.append(part).append("\t{");
-						for(String p : xpaths){
+						for(String p : selectedElements){
 							result.append("("+p+")");
 							result.append(",");
 						}
+						result.setLength(result.length() - 1);
 						result.append("}");
-						//xpaths = new ArrayList<String>();
+						selectedElements.clear();
 						System.out.println(result);
+						writer.println(result.toString());
 					}
 				}
 			}
+			//bw.close();
+			writer.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

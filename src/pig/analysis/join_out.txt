@@ -1,0 +1,61 @@
+(a,{(d),(e),(g)},a,{(d),(e),(g)})
+(a,{(d),(e),(g)},a,{(d),(e),(k)})
+(a,{(d),(e),(g)},a,{(d),(e)})
+(a,{(d),(e),(g)},a,{(e),(f),(g)})
+(a,{(d),(e),(g)},a,{(e),(f),(g)})
+(a,{(d),(e),(g)},a,{(d),(e)})
+(a,{(d),(e),(k)},a,{(d),(e),(g)})
+(a,{(d),(e),(k)},a,{(d),(e),(k)})
+(a,{(d),(e),(k)},a,{(d),(e)})
+(a,{(d),(e),(k)},a,{(e),(f),(g)})
+(a,{(d),(e),(k)},a,{(e),(f),(g)})
+(a,{(d),(e),(k)},a,{(d),(e)})
+(a,{(d),(e)},a,{(d),(e),(g)})
+(a,{(d),(e)},a,{(d),(e),(k)})
+(a,{(d),(e)},a,{(d),(e)})
+(a,{(d),(e)},a,{(e),(f),(g)})
+(a,{(d),(e)},a,{(e),(f),(g)})
+(a,{(d),(e)},a,{(d),(e)})
+(a,{(e),(f),(g)},a,{(d),(e),(g)})
+(a,{(e),(f),(g)},a,{(d),(e),(k)})
+(a,{(e),(f),(g)},a,{(d),(e)})
+(a,{(e),(f),(g)},a,{(e),(f),(g)})
+(a,{(e),(f),(g)},a,{(e),(f),(g)})
+(a,{(e),(f),(g)},a,{(d),(e)})
+(a,{(e),(f),(g)},a,{(d),(e),(g)})
+(a,{(e),(f),(g)},a,{(d),(e),(k)})
+(a,{(e),(f),(g)},a,{(d),(e)})
+(a,{(e),(f),(g)},a,{(e),(f),(g)})
+(a,{(e),(f),(g)},a,{(e),(f),(g)})
+(a,{(e),(f),(g)},a,{(d),(e)})
+(a,{(d),(e)},a,{(d),(e),(g)})
+(a,{(d),(e)},a,{(d),(e),(k)})
+(a,{(d),(e)},a,{(d),(e)})
+(a,{(d),(e)},a,{(e),(f),(g)})
+(a,{(d),(e)},a,{(e),(f),(g)})
+(a,{(d),(e)},a,{(d),(e)})
+(b,{(d),(e),(f)},b,{(d),(e),(f)})
+(b,{(d),(e),(f)},b,{(d),(e)})
+(b,{(d),(e),(f)},b,{(d)})
+(b,{(d),(e)},b,{(d),(e),(f)})
+(b,{(d),(e)},b,{(d),(e)})
+(b,{(d),(e)},b,{(d)})
+(b,{(d)},b,{(d),(e),(f)})
+(b,{(d)},b,{(d),(e)})
+(b,{(d)},b,{(d)})
+
+JOIN_URL: {DATA::url: chararray,DATA::leafpaths: {t: (xpath: chararray)},DATACOPY::url: chararray,DATACOPY::leafpaths: {t: (xpath: chararray)}}
+grunt> DATA_PROJECT = FOREACH JOIN_URL GENERATE DATA::url,DATACOPY::url,DATA::leafpaths,DATACOPY::leafpaths;
+grunt> describe DATA
+
+DATACOPY       DATA_PROJECT   DATA
+grunt> describe DATA_PROJECT
+DATA_PROJECT: {DATA::url: chararray,DATACOPY::url: chararray,DATA::leafpaths: {t: (xpath: chararray)},DATACOPY::leafpaths: {t: (xpath: chararray)}}
+
+egister 'myudfs.py' using jython as myfuncs;
+
+-- Schema of A is: A:{ T:(letter: chararray, B_of_nums: {num: int}) }
+
+B = FOREACH A GENERATE TOTUPLE(T.letter, myfuncs.concat_bag(T.B_of_nums))
+
+

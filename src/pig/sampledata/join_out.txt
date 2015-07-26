@@ -44,3 +44,12 @@
 (b,{(d)},b,{(d),(e)})
 (b,{(d)},b,{(d)})
 
+JOIN_URL: {DATA::url: chararray,DATA::leafpaths: {t: (xpath: chararray)},DATACOPY::url: chararray,DATACOPY::leafpaths: {t: (xpath: chararray)}}
+grunt> DATA_PROJECT = FOREACH JOIN_URL GENERATE DATA::url,DATACOPY::url,DATA::leafpaths,DATACOPY::leafpaths;
+grunt> describe DATA
+
+DATACOPY       DATA_PROJECT   DATA
+grunt> describe DATA_PROJECT
+DATA_PROJECT: {DATA::url: chararray,DATACOPY::url: chararray,DATA::leafpaths: {t: (xpath: chararray)},DATACOPY::leafpaths: {t: (xpath: chararray)}}
+
+

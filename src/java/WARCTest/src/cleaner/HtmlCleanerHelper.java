@@ -73,21 +73,25 @@ public class HtmlCleanerHelper {
 						props.setAllowMultiWordAttributes(true);
 						props.setRecognizeUnicodeChars(true);
 						props.setOmitComments(true);
-						node = cleaner.clean(inp.toString());
-					
-						String xmlContent = new PrettyXmlSerializer(props).getAsString(node, "utf-8");
-						//System.out.println(xmlContent);
-						int begin = xmlContent.indexOf("<html");
+						String rawInput = inp.toString();
+						int begin = rawInput.indexOf("<html");
 						String onlyHtml = "";
 						if (begin != -1) {
-							onlyHtml = xmlContent.substring(begin);
+							onlyHtml = rawInput.substring(begin);
 						}else{
 							continue;
 						}
 						
-						clWriter.write(onlyHtml);
+						
+						node = cleaner.clean(onlyHtml);
+					
+						String xmlContent = new PrettyXmlSerializer(props).getAsString(node, "utf-8");
+						//System.out.println(xmlContent);
+						
+						
+						clWriter.write(xmlContent);
 						clWriter.close();
-						xpaths = getXpath(onlyHtml);
+						xpaths = getXpath(xmlContent);
 						Set<String> setItems = new LinkedHashSet<String>(xpaths);
 						xpaths.clear();
 						xpaths.addAll(setItems);

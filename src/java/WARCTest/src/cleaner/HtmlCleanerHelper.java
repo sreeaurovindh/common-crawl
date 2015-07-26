@@ -1,5 +1,7 @@
 package cleaner;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
@@ -39,18 +41,20 @@ public class HtmlCleanerHelper {
 	public static void main(String[] args) {
 		TagNode node;
 		// path config
-		String dataUrl = "/home/dilip/common-crawl-data/";
+		String dataUrl = "/home/sree/Projects/common-crawl/data/indeed-html/";
+		String cleanedhtml = "/home/sree/Projects/common-crawl/data/cleanedhtml/";
 		List<String> xpaths = new ArrayList<String>();
 		HashSet<String> visualElements = new HashSet<String>(Arrays.asList("a",
-				"area", "map", "track", "audio", "embed", "select", "applet",
+				"area", "audio", "embed", "option", "applet",
 				"button", "canvas", "embed", "figure", "frame", "iframe",
-				"img", "input", "li", "menu", "menuitem", "meta", "optgroup",
-				"progress", "td", "th", "textarea", "ul", "video"));
+				"img", "input", "menuitem", "option",
+				 "td", "textarea", "li", "video"));
 		ArrayList<String> selectedElements = new ArrayList<String>();
 		ArrayList<String> prevElement = new ArrayList<String>();
 		try {
-			PrintWriter writer = new PrintWriter("/home/dilip/common-crawl-data/resultXpaths.txt", "UTF-8");
-			for (String line : Files.readAllLines(Paths.get("/home/dilip/common-crawl-data/indexes/html_index.txt"))) {
+			PrintWriter writer = new PrintWriter("/home/sree/Projects/common-crawl/data/resultXpaths.txt", "UTF-8");
+		
+			for (String line : Files.readAllLines(Paths.get("/home/sree/Projects/common-crawl/data/index_may2015/1/html_index.txt"))) {
 				for (String part : line.split(",")) {
 					
 					if (part.contains("html")) {
@@ -58,6 +62,10 @@ public class HtmlCleanerHelper {
 						for (String l : Files.readAllLines(Paths.get(dataUrl + part))) {
 							inp.append(l);
 						}
+						String pathToCleanedWriter = cleanedhtml + part;
+						//Write cleaned files to disk
+						FileWriter filewriter = new FileWriter(new File(pathToCleanedWriter));
+						PrintWriter clWriter = new  PrintWriter(filewriter);
 						// System.out.println(inp);
 						HtmlCleaner cleaner = new HtmlCleaner();
 						CleanerProperties props = cleaner.getProperties();
@@ -66,9 +74,20 @@ public class HtmlCleanerHelper {
 						props.setRecognizeUnicodeChars(true);
 						props.setOmitComments(true);
 						node = cleaner.clean(inp.toString());
+					
 						String xmlContent = new PrettyXmlSerializer(props).getAsString(node, "utf-8");
 						//System.out.println(xmlContent);
-						xpaths = getXpath(xmlContent);
+						int begin = xmlContent.indexOf("<html");
+						String onlyHtml = "";
+						if (begin != -1) {
+							onlyHtml = xmlContent.substring(begin);
+						}else{
+							continue;
+						}
+						
+						clWriter.write(onlyHtml);
+						clWriter.close();
+						xpaths = getXpath(onlyHtml);
 						Set<String> setItems = new LinkedHashSet<String>(xpaths);
 						xpaths.clear();
 						xpaths.addAll(setItems);
@@ -162,12 +181,12 @@ public class HtmlCleanerHelper {
 
 		} else if (n.getParentNode().getNodeType() == Node.DOCUMENT_NODE) {
 
-			ChildNumber cn = new ChildNumber(n);
+//			ChildNumber cn = new ChildNumber(n);
 			// xpath = "/node()[" + cn.getXPath() + "]";
 			xpath = "/" + n.getNodeName();
 		} else {
 
-			ChildNumber cn = new ChildNumber(n);
+//			ChildNumber cn = new ChildNumber(n);
 
 			// xpath = getXPath(n.getParentNode()) + "/node()[" + cn.getXPath()
 			// + "]";

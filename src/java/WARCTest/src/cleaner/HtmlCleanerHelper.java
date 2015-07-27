@@ -18,6 +18,7 @@ import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.htmlcleaner.CleanerProperties;
 import org.htmlcleaner.HtmlCleaner;
@@ -32,7 +33,16 @@ import org.w3c.dom.traversal.DocumentTraversal;
 import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.NodeIterator;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
+import java.io.StringReader;
+
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+
+import org.xml.sax.InputSource;
 public class HtmlCleanerHelper {
 
 	@SuppressWarnings("unchecked")
@@ -49,6 +59,7 @@ public class HtmlCleanerHelper {
 		ArrayList<String> selectedElements = new ArrayList<String>();
 		ArrayList<String> prevElement = new ArrayList<String>();
 		String fileName = "", prevFileName = "";
+		String fileContent = "", prevFileContent = "";
 		try {
 			PrintWriter writer = new PrintWriter(
 					"/home/pramodh/resultXpaths.txt", "UTF-8");
@@ -96,6 +107,10 @@ public class HtmlCleanerHelper {
 
 						clWriter.write(xmlContent);
 						clWriter.close();
+						
+						prevFileContent = fileContent;
+						fileContent = xmlContent;
+						
 						xpaths = getXpath(xmlContent);
 						// remove all duplicate xpaths
 						Set<String> setItems = new LinkedHashSet<String>(xpaths);
@@ -141,12 +156,15 @@ public class HtmlCleanerHelper {
 							while (itr.hasNext()) {
 								diffPaths.append("," + itr.next());
 							}
-							if (diffPaths.toString().length() > 0)
-								System.out.println(prevFileName + "(" + s1count
-										+ ")," + fileName + "(" + s2count + ")"
-										+ " Diff(" + diffSize
-										+ ") ==> Difference::"
-										+ diffPaths.toString());
+							if (diffPaths.toString().length() > 0){
+//								System.out.println(prevFileName + "(" + s1count
+//										+ ")," + fileName + "(" + s2count + ")"
+//										+ " Diff(" + diffSize
+//										+ ") ==> Difference::"
+//										+ diffPaths.toString());
+								validateXpath(diffPaths.toString().substring(1), fileContent, prevFileContent, fileName, prevFileName);
+							}
+							
 						}
 						prevElement = (ArrayList<String>) selectedElements
 								.clone();
@@ -164,6 +182,39 @@ public class HtmlCleanerHelper {
 
 	}
 
+	public static void validateXpath(String diff, String fileContent, String prevFileContent, String fileName, String prevFileName) {
+		XPath xPath = XPathFactory.newInstance().newXPath();
+		try {
+			DocumentBuilder db1 = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+			InputSource is1 = new InputSource();
+			is1.setCharacterStream(new StringReader(prevFileContent));
+			Document doc1 = db1.parse(is1);
+			DocumentBuilder db2 = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+			InputSource is2 = new InputSource();
+			is2.setCharacterStream(new StringReader(fileContent));
+			Document doc2 = db2.parse(is2);
+			
+			String[] diffStrings = diff.split(",");
+			for(String eachDiff:diffStrings){
+				if(doc1!=null && doc2!=null){
+					Node node1 = (Node) xPath.evaluate(eachDiff, doc1, XPathConstants.NODE);
+					if(node1 == null)
+						System.out.println("F1 - 0");
+					Node node2 = (Node) xPath.evaluate(eachDiff, doc2, XPathConstants.NODE);
+					if(node2 != null)
+						System.out.println("F2 - 1");
+				}
+			}
+		} catch (SAXException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}catch (ParserConfigurationException e) {
+			e.printStackTrace();
+		}catch (XPathExpressionException e) {
+			e.printStackTrace();
+		}
+	}
 	public static List<String> getXpath(String xml) {
 		List<String> xpaths = new ArrayList<String>();
 		try {

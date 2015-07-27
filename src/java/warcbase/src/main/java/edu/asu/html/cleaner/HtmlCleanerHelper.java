@@ -334,10 +334,9 @@ public class HtmlCleanerHelper {
 
 	public static ArrayList<String> cleanHtml(String rawHtmlFile) {
 		HashSet<String> visualElements = new HashSet<String>(Arrays.asList("a",
-				"area", "audio", "embed", "option", "applet",
-				"button", "canvas", "embed", "figure", "frame", "iframe",
-				"img", "input", "menuitem", "option",
-				 "td", "textarea", "li", "video"));
+				"area", "audio", "embed", "option", "applet", "button",
+				"canvas", "figure", "frame", "iframe", "img", "input",
+				"textarea", "video"));
 		ArrayList<String> selectedElements = new ArrayList<String>();
 		int begin = rawHtmlFile.indexOf("<html");
 		if (begin != -1) {

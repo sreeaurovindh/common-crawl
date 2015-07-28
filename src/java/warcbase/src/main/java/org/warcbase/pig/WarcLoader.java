@@ -47,7 +47,7 @@ public class WarcLoader extends FileInputLoadFunc implements LoadMetadata {
 
 	private static final TupleFactory TUPLE_FACTORY = TupleFactory
 			.getInstance();
-	private static final BagFactory BAG_FACTORY = BagFactory.getInstance();
+//	private static final BagFactory BAG_FACTORY = BagFactory.getInstance();
 	private static final DateFormat ISO8601 = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ssX");
 
@@ -113,15 +113,21 @@ public class WarcLoader extends FileInputLoadFunc implements LoadMetadata {
 				LOG.error("Encountered ParseException ingesting " + url);
 			}
 
-			DataBag leafPaths = BAG_FACTORY.newDefaultBag();
-			// TODO : Have to filter based on mime
-
+//			DataBag leafPaths = BAG_FACTORY.newDefaultBag();
+			StringBuilder leafpathStr = new StringBuilder();
+			boolean firstElement = true;
 			if (type!=null && type.contains("text/html")) {
 				ArrayList<String> xPathTags = HtmlCleanerHelper
 						.cleanHtml(new String(content));
 				for (String xpathLeafElement : xPathTags) {
-					leafPaths.add(TUPLE_FACTORY.newTupleNoCopy(Arrays
-							.asList(xpathLeafElement)));
+					if(!firstElement){
+						leafpathStr.append("|");
+					}else{
+						firstElement = false;
+					}
+					leafpathStr.append(xpathLeafElement);
+//					leafPaths.add(TUPLE_FACTORY.newTupleNoCopy(Arrays
+//							.asList(xpathLeafElement)));
 
 				}
 			}
@@ -130,7 +136,7 @@ public class WarcLoader extends FileInputLoadFunc implements LoadMetadata {
 			protoTuple.add(date);
 			protoTuple.add(type);
 
-			protoTuple.add(leafPaths);
+			protoTuple.add(leafpathStr.toString());
 
 			return TUPLE_FACTORY.newTupleNoCopy(protoTuple);
 		} catch (InterruptedException e) {
@@ -168,13 +174,15 @@ public class WarcLoader extends FileInputLoadFunc implements LoadMetadata {
 		schema.add(new FieldSchema("url", DataType.CHARARRAY));
 		schema.add(new FieldSchema("date", DataType.CHARARRAY));
 		schema.add(new FieldSchema("mime", DataType.CHARARRAY));
-
-		// Wrapping Tuples in a bag
-		Schema pathToLeaf = new Schema();
-		pathToLeaf.add(new FieldSchema("xpath", DataType.CHARARRAY));
-		Schema pathToLeafWrapper = new Schema(new FieldSchema("t", pathToLeaf));
-		pathToLeafWrapper.setTwoLevelAccessRequired(true);
-		schema.add(new FieldSchema("leafpaths", pathToLeafWrapper, DataType.BAG));
+		schema.add(new FieldSchema("leafpathstr", DataType.CHARARRAY));
+		
+		
+//		// Wrapping Tuples in a bag
+//		Schema pathToLeaf = new Schema();
+//		pathToLeaf.add(new FieldSchema("xpath", DataType.CHARARRAY));
+//		Schema pathToLeafWrapper = new Schema(new FieldSchema("t", pathToLeaf));
+//		pathToLeafWrapper.setTwoLevelAccessRequired(true);
+//		schema.add(new FieldSchema("leafpaths", pathToLeafWrapper, DataType.BAG));
 
 		// // Schema is (url:chararray, date:chararray, mime:chararray,
 		// content:bytearray)

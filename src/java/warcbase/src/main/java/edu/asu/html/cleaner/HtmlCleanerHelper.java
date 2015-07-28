@@ -327,8 +327,7 @@ public class HtmlCleanerHelper {
 				+ "<!-- Set $wgGoogleAnalyticsAccount to your account # provided by Google Analytics. --><!-- Served in 0.823 secs. -->\n"
 				+ "\t</body>\n" + "<!-- Cached/compressed 20140418053901 -->\n"
 				+ "</html>";
-		//cleanHtml(sample);
-		 
+		// cleanHtml(sample);
 
 	}
 
@@ -365,11 +364,14 @@ public class HtmlCleanerHelper {
 				Iterator<String> xPathItr = xPaths.iterator();
 				while (xPathItr.hasNext()) {
 					String singleXPath = xPathItr.next();
-					int beginIndex = singleXPath.lastIndexOf("/");
-					if (beginIndex != -1) {
-						String element = singleXPath.substring(beginIndex + 1);
-						if (visualElements.contains(element)) {
-							selectedElements.add(singleXPath);
+					if (!singleXPath.contains("noscript")) {
+						int beginIndex = singleXPath.lastIndexOf("/");
+						if (beginIndex != -1) {
+							String element = singleXPath
+									.substring(beginIndex + 1);
+							if (visualElements.contains(element)) {
+								selectedElements.add(singleXPath);
+							}
 						}
 					}
 				}

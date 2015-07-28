@@ -55,10 +55,9 @@ filteredVariations = FILTER variationAvg by urlpath_count >= avgPathCnt;
 templatesOut = FOREACH templates GENERATE url,leafpathstr,urlpath_count,leafCombiner.splitBag(leafpathstr);
 variationsOut = FOREACH filteredVariations GENERATE url,leafpathstr,urlpath_count,leafCombiner.splitBag(leafpathstr);
 
-
-# Remove Minor abberations of templates
-# Check what happens with sample data??
-
+/* Remove Minor abberations of templates
+# Check what happens with sample data?? */
+/** THINK about a filter on variationsOut here!!*/
 
 
 
@@ -70,14 +69,52 @@ sorted_b1 = ORDER templatesOut::leafpaths by xpaths;
 sorted_b2 = ORDER variationsOut::leafpaths by xpaths;
 setintersect = SetIntersect(sorted_b1,sorted_b2);
 setunion = SetUnion(sorted_b1,sorted_b2);
-GENERATE templatesOut::url,templatesOut::leafpathstr,variationsOut::null::leafpathstr,(DOUBLE)COUNT(setintersect) /(DOUBLE) COUNT(setunion) AS jaccard;
+GENERATE templatesOut::url AS url,templatesOut::leafpathstr as template_leafpathstr,templatesOut::urlpath_count as templates_count,variationsOut::null::leafpathstr as variations_leafpathstr,variationsOut::null::urlpath_count as variations_count,(DOUBLE)COUNT(setintersect) /(DOUBLE) COUNT(setunion) AS jaccard;
 
 };
 
 
 /*Jaccard should be 0.8 change it later*/
-templates_match  = FILTER jaccard_sim by jaccard > 0.6;
-urlpath_str = FOREACH jaccard_sim GENERATE data::url as finurl,leafCombiner.concat_bag(bagunion.xpath) as xpaths,jaccard;
+templates_match  = FILTER jaccard_sim by jaccard > 0.49;
+
+/* we find the maximum jaccard for every group of variatiosn and get the maximum similarity from it.*/
+similaritybyVariations = GROUP templates_match by (url,variations_leafpathstr);
+maxSimilarity = FOREACH similaritybyVariations{
+	sim_desc = order templates_match by jaccard desc;
+	sim_max = limit sim_desc 1;
+	GENERATE FLATTEN(sim_max);
+
+};
+
+similarityAll = FOREACH maxSimilarity GENERATE sim_max::url as url,sim_max::template_leafpathstr as leafpathstr,sim_max::templates_count as template_count,sim_max::variations_count as var_count;
+
+/* For each group of (url,leafpathstr,template_count) we have to sum up the var_count */
+
+gather_templates = GROUP similarityAll by (url,leafpathstr,template_count);
+template_sums = FOREACH gather_templates GENERATE FLATTEN(group) AS (url,leafpathstr,template_count),SUM(similarityAll.var_count) as var_sum;
+
+
+/*Inner Join both templates to arrive at final number */
+
+template_select  = FOREACH templatesOut GENERATE url,leafpathstr,urlpath_count;
+template_join = join template_select by (url,leafpathstr,urlpath_count) LEFT OUTER, template_sums by (url,leafpathstr,template_count);
+
+templates_final = FOREACH template_join GENERATE  template_select::url AS url,template_select::leafpathstr AS leafpathstr,template_select::urlpath_count as template_count,(template_sums::var_sum IS NULL ? 0 : template_sums::var_sum)  as var_count;
+
+templates = FOREACH templates_final GENERATE url,leafpathstr, template_count + var_count as occurence;
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 DUMP byUrlXpathsCount
    

@@ -91,10 +91,11 @@ similarityAll = FOREACH maxSimilarity GENERATE sim_max::url as url,sim_max::temp
 /* For each group of (url,leafpathstr,template_count) we have to sum up the var_count */
 
 gather_templates = GROUP similarityAll by (url,leafpathstr,template_count);
+/* Sum across all variations */
 template_sums = FOREACH gather_templates GENERATE FLATTEN(group) AS (url,leafpathstr,template_count),SUM(similarityAll.var_count) as var_sum;
 
 
-/*Inner Join both templates to arrive at final number */
+/*left outer Join both templates to arrive at final number */
 
 template_select  = FOREACH templatesOut GENERATE url,leafpathstr,urlpath_count;
 template_join = join template_select by (url,leafpathstr,urlpath_count) LEFT OUTER, template_sums by (url,leafpathstr,template_count);

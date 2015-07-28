@@ -99,9 +99,8 @@ template_sums = FOREACH gather_templates GENERATE FLATTEN(group) AS (url,leafpat
 template_select  = FOREACH templatesOut GENERATE url,leafpathstr,urlpath_count;
 template_join = join template_select by (url,leafpathstr,urlpath_count) LEFT OUTER, template_sums by (url,leafpathstr,template_count);
 
-templates_final = FOREACH template_join GENERATE  template_select::url AS url,template_select::leafpathstr AS leafpathstr,template_select::urlpath_count as template_count,(template_sums::var_sum IS NULL ? 0 : template_sums::var_sum)  as var_count;
+templates_final = FOREACH template_join GENERATE  template_select::url AS url,template_select::leafpathstr AS leafpathstr,(template_sums::var_sum IS NULL ? template_select::urlpath_count :template_select::urlpath_count+ template_sums::var_sum)  as occurence;
 
-templates = FOREACH templates_final GENERATE url,leafpathstr, template_count + var_count as occurence;
 
 
 

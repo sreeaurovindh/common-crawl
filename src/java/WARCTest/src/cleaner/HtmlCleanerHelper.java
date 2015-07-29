@@ -135,13 +135,12 @@ public class HtmlCleanerHelper {
 					} else if (part.contains("http")) {
 						Collections.sort(selectedElements);
 						StringBuilder result = new StringBuilder();
-						result.append(fileName).append("\t{");
+						result.append("a").append("\t");
 						for (String p : selectedElements) {
-							result.append("(" + p + ")");
-							result.append(";");
+							result.append(p);
+							result.append("|");
 						}
 						result.setLength(result.length() - 1);
-						result.append("}");
 						if (!prevElement.isEmpty()) {
 							HashSet<String> s1 = new HashSet<String>(
 									prevElement);

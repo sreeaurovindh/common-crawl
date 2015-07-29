@@ -138,7 +138,7 @@ public class HtmlCleanerHelper {
 						result.append(fileName).append("\t{");
 						for (String p : selectedElements) {
 							result.append("(" + p + ")");
-							result.append(",");
+							result.append(";");
 						}
 						result.setLength(result.length() - 1);
 						result.append("}");

@@ -19,6 +19,10 @@ import java.util.Set;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.htmlcleaner.CleanerProperties;
 import org.htmlcleaner.HtmlCleaner;
@@ -33,24 +37,16 @@ import org.w3c.dom.traversal.DocumentTraversal;
 import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.NodeIterator;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
-import java.io.StringReader;
-
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 public class HtmlCleanerHelper {
 
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) {
 		TagNode node;
 		// path config
-		String dataUrl = "/home/pramodh/";
-		String cleanedhtml = "/home/pramodh/cleaned-html/";
+		String dataUrl = "/home/dilip/common-crawl-data/";
+		String cleanedhtml = dataUrl+"cleaned-html/";
 		List<String> xpaths = new ArrayList<String>();
 		HashSet<String> visualElements = new HashSet<String>(Arrays.asList("a",
 				"area", "audio", "embed", "option", "applet", "button",
@@ -62,10 +58,10 @@ public class HtmlCleanerHelper {
 		String fileContent = "", prevFileContent = "";
 		try {
 			PrintWriter writer = new PrintWriter(
-					"/home/pramodh/resultXpaths.txt", "UTF-8");
+					"/home/dilip/common-crawl-data/resultXpaths.txt", "UTF-8");
 
 			for (String line : Files.readAllLines(Paths
-					.get("/home/pramodh/1-index/html_index.txt"))) {
+					.get(dataUrl+"indexes/html_index.txt"))) {
 				for (String part : line.split(",")) {
 
 					if (part.contains("html")) {
@@ -120,7 +116,6 @@ public class HtmlCleanerHelper {
 						Iterator<String> xPathItr = xpaths.iterator();
 						while (xPathItr.hasNext()) {
 							String singleXPath = xPathItr.next();
-							if (!singleXPath.contains("noscript")) {
 								int beginIndex = singleXPath.lastIndexOf("/");
 								if (beginIndex != -1) {
 									String element = singleXPath
@@ -129,7 +124,6 @@ public class HtmlCleanerHelper {
 										selectedElements.add(singleXPath);
 									}
 								}
-							}
 						}
 
 					} else if (part.contains("http")) {
@@ -168,12 +162,11 @@ public class HtmlCleanerHelper {
 						prevElement = (ArrayList<String>) selectedElements
 								.clone();
 						selectedElements.clear();
-
+						System.out.println(result.toString());
 						writer.println(result.toString());
 					}
 				}
 			}
-			// bw.close();
 			writer.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -228,9 +221,11 @@ public class HtmlCleanerHelper {
 			for (Node n = iterator.nextNode(); n != null; n = iterator
 					.nextNode()) {
 				NodeList children = ((Element) n).getChildNodes();
-				if (children.getLength() <= 0) {
+				if (n.getNodeName() == "a" || children.getLength() <= 0) {
 					// System.out.println(getXPath(n));
-					xpaths.add(getXPath(n));
+					String res = getXPath(n);
+					if(!res.contains("noscript"))
+						xpaths.add(res);
 				}
 			}
 

@@ -1,1 +1,3 @@
 target/warcbase-0.1.0-SNAPSHOT-fatjar.jar
+pig_*.log
+sampledata/pig_*.log

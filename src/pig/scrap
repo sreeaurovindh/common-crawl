@@ -1,3 +1,16 @@
+B = GROUP UrlXpathsCount by url;
+computeMidRange  = foreach byUrl  generate group as mid_url,((DOUBLE) MAX(UrlXpathsCount.urlpath_count) +(DOUBLE)MIN(UrlXpathsCount.urlpath_count))/2 as midRange;
+D = foreach C generate url, ((double)max_count + (double)min_count)/2 as val;
+
+
+
+
+
+
+
+
+
+
 maxSimilarity
 
 ({(a,d|e,2,d|e|g,1,0.6666666666666666)})

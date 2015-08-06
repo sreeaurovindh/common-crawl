@@ -3,12 +3,10 @@ register 'splitElements.py' using jython as leafCombiner;
 define SetUnion datafu.pig.sets.SetUnion();
 define SetIntersect datafu.pig.sets.SetIntersect();
 
-data  = load 'sampledata/' USING PigStorage('\t') AS (url:chararray , leafpathstr:chararray);
+data  = load '/sampledata' USING PigStorage('\t') AS (url:chararray , leafpathstr:chararray);
 
 byUrlXpaths = GROUP data  by (url,leafpathstr);
-UrlXpathsCount = FOREACH byUrlXpaths GENERATE
-        FLATTEN(group) AS (url,leafpathstr),
-        COUNT(data) AS urlpath_count;
+UrlXpathsCount = FOREACH byUrlXpaths GENERATE FLATTEN(group) AS (url,leafpathstr),COUNT(data) AS urlpath_count;
 
 
 /* orderbyXpaths = ORDER byUrlXpathsCount by urlpath_count desc,url;*/
@@ -17,23 +15,8 @@ byUrl = GROUP UrlXpathsCount by url;
 
 
 
-
-
-/* min and max for each group */
-
-/*maxminByUrl: {urls_max::xpathstr: chararray,urls_max::url: chararray,urls_max::urlpath_count: long,urls_min::xpathstr: chararray,urls_min::url: chararray,urls_min::urlpath_count: long}
-*/
-midRangeByUrl = FOREACH byUrl{
-	urls_desc = order UrlXpathsCount by urlpath_count desc;
-	urls_max = limit urls_desc 1;
-	urls_asc = order UrlXpathsCount by urlpath_count asc;
-	urls_min = limit urls_asc 1;
-	
-        GENERATE FLATTEN(urls_max),FLATTEN(urls_min);
-};
-
-/* Since the values are for each group we get the mimmax value */
-computeMidRange = FOREACH midRangeByUrl generate urls_max::url as mid_url,((DOUBLE)urls_max::urlpath_count+(DOUBLE) urls_min::urlpath_count)/2 as midRange;
+/* mid range for each Url */
+computeMidRange  = foreach byUrl  generate group as mid_url,((DOUBLE) MAX(UrlXpathsCount.urlpath_count) +(DOUBLE)MIN(UrlXpathsCount.urlpath_count))/2 as midRange;
 
 
 /* Join computeMidRange  and UrlXpathsCount */
@@ -75,7 +58,7 @@ GENERATE templatesOut::url AS url,templatesOut::leafpathstr as template_leafpath
 
 
 /*Jaccard should be 0.8 change it later*/
-templates_match  = FILTER jaccard_sim by jaccard > 0.49;
+templates_match  = FILTER jaccard_sim by jaccard > 0.80;
 
 /* we find the maximum jaccard for every group of variatiosn and get the maximum similarity from it.*/
 similaritybyVariations = GROUP templates_match by (url,variations_leafpathstr);
@@ -102,21 +85,5 @@ template_join = join template_select by (url,leafpathstr,urlpath_count) LEFT OUT
 
 templates_final = FOREACH template_join GENERATE  template_select::url AS url,template_select::leafpathstr AS leafpathstr,(template_sums::var_sum IS NULL ? template_select::urlpath_count :template_select::urlpath_count+ template_sums::var_sum)  as occurence;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-DUMP byUrlXpathsCount
-   
-
+store templates_final into '/finishedFin';
 

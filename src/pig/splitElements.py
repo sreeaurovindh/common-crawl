@@ -1,4 +1,6 @@
 @outputSchema("leafpaths:bag{t:tuple(xpaths:chararray)}")
 def splitBag(input):
-    outBag = input.split("|")
-    return outBag
+    result = [' ']
+    if input is not None:
+        result = input.split("|")
+    return result

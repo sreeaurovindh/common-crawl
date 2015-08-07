@@ -3,10 +3,11 @@ register 'splitElements.py' using jython as leafCombiner;
 define SetUnion datafu.pig.sets.SetUnion();
 define SetIntersect datafu.pig.sets.SetIntersect();
 
-data  = load '/sampledata' USING PigStorage('\t') AS (url:chararray , leafpathstr:chararray);
+data_raw  = load 'testdata' USING PigStorage('\t') AS (url:chararray , leafpathstr:chararray);
+data = FILTER data_raw by leafpathstr is not null;
 
 byUrlXpaths = GROUP data  by (url,leafpathstr);
-UrlXpathsCount = FOREACH byUrlXpaths GENERATE FLATTEN(group) AS (url,leafpathstr),COUNT(data) AS urlpath_count;
+UrlXpathsCount = FOREACH byUrlXpaths GENERATE FLATTEN(group) AS (url,leafpathstr),(DOUBLE)COUNT(data) AS urlpath_count;
 
 
 /* orderbyXpaths = ORDER byUrlXpathsCount by urlpath_count desc,url;*/
@@ -85,5 +86,5 @@ template_join = join template_select by (url,leafpathstr,urlpath_count) LEFT OUT
 
 templates_final = FOREACH template_join GENERATE  template_select::url AS url,template_select::leafpathstr AS leafpathstr,(template_sums::var_sum IS NULL ? template_select::urlpath_count :template_select::urlpath_count+ template_sums::var_sum)  as occurence;
 
-store templates_final into '/finishedFin';
+store templates_final into 'finishedFin';
 

@@ -1,9 +1,16 @@
 register 'target/warcbase-0.1.0-SNAPSHOT-fatjar.jar';
 register 'splitElements.py' using jython as leafCombiner;
+
+DEFINE WarcLoader org.warcbase.pig.WarcLoader();
+
 define SetUnion datafu.pig.sets.SetUnion();
 define SetIntersect datafu.pig.sets.SetIntersect();
 
-data_raw  = load 'testdata' USING PigStorage('\t') AS (url:chararray , leafpathstr:chararray);
+
+warc = LOAD '/warcdata' USING WarcLoader AS (url: chararray, ipaddress: chararray, leafpathstr: chararray);
+data_raw = FOREACH warc GENERATE url,leafpathstr;
+
+/*data_raw  = load 'testdata' USING PigStorage('\t') AS (url:chararray , leafpathstr:chararray);*/
 data = FILTER data_raw by leafpathstr is not null;
 
 byUrlXpaths = GROUP data  by (url,leafpathstr);
@@ -86,5 +93,5 @@ template_join = join template_select by (url,leafpathstr,urlpath_count) LEFT OUT
 
 templates_final = FOREACH template_join GENERATE  template_select::url AS url,template_select::leafpathstr AS leafpathstr,(template_sums::var_sum IS NULL ? template_select::urlpath_count :template_select::urlpath_count+ template_sums::var_sum)  as occurence;
 
-store templates_final into 'finishedFin';
+store templates_final into '/combinedOutput1';
 

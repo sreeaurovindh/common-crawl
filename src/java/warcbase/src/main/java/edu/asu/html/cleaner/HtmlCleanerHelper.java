@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -398,8 +399,11 @@ public class HtmlCleanerHelper {
 			for (Node n = iterator.nextNode(); n != null; n = iterator
 					.nextNode()) {
 				NodeList children = ((Element) n).getChildNodes();
-				if (children.getLength() <= 1) {
-					xPathNodes.add(getXPath(n));
+				if (n.getNodeName() == "a" || children.getLength() <= 0) {
+					// System.out.println(getXPath(n));
+					String res = getXPath(n);
+					if(!res.contains("noscript") | !res.contains("type=\"hidden\""))
+						xPathNodes.add(res);
 				}
 			}
 
@@ -408,6 +412,8 @@ public class HtmlCleanerHelper {
 		}
 		return xPathNodes;
 	}
+	
+ 
 
 	public static String getXPath(final Node n) {
 
@@ -428,8 +434,12 @@ public class HtmlCleanerHelper {
 					"DocumentType nodes cannot be identified with XPath");
 
 		} else if (n.getParentNode().getNodeType() == Node.DOCUMENT_NODE) {
+
+		 
 			xpath = "/" + n.getNodeName();
 		} else {
+
+		
 			xpath = getXPath(n.getParentNode()) + "/" + n.getNodeName();
 		}
 

@@ -1,6 +1,8 @@
 package org.warcbase.pig;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -89,14 +91,41 @@ public class WarcLoader extends FileInputLoadFunc implements LoadMetadata {
 					break;
 				}
 			}
+			
 
-			String url = header.getUrl();
+			String urlFull = header.getUrl();
+			
+			URI uri;
+			String url = "";
+			try {
+			uri = new URI(urlFull);
+				 String domain = uri.getHost();
+				 String domainNameFull =   domain.startsWith("www.") ? domain.substring(4) : domain;
+				 if(domainNameFull.contains(".")){
+					 String[] components = domainNameFull.split("\\.");
+					 int totalLength = components.length;
+					 if(totalLength > 1){
+						 url = components[totalLength-2];
+					 }
+				 }else{
+					 url = domainNameFull;
+				 }
+			} catch (URISyntaxException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		   
+			
+		    
+		    
+		    String ipaddress = (String) header.getHeaderValue("WARC-IP-Address");
 			byte[] content = null;
 			String type = null;
 
 			try {
 				content = WarcRecordUtils.getContent(record);
 				type = WarcRecordUtils.getWarcResponseMimeType(content);
+				
 			} catch (OutOfMemoryError e) {
 				// When we get a corrupt record, this will happen...
 				// Try to recover and move on...
@@ -104,14 +133,14 @@ public class WarcLoader extends FileInputLoadFunc implements LoadMetadata {
 				LOG.error("Attempting to continue...");
 			}
 
-			Date d = null;
-			String date = null;
-			try {
-				d = ISO8601.parse(header.getDate());
-				date = ArchiveUtils.get14DigitDate(d);
-			} catch (ParseException e) {
-				LOG.error("Encountered ParseException ingesting " + url);
-			}
+//			Date d = null;
+//			String date = null;
+//			try {
+//				d = ISO8601.parse(header.getDate());
+//				date = ArchiveUtils.get14DigitDate(d);
+//			} catch (ParseException e) {
+//				LOG.error("Encountered ParseException ingesting " + url);
+//			}
 
 //			DataBag leafPaths = BAG_FACTORY.newDefaultBag();
 			StringBuilder leafpathStr = new StringBuilder();
@@ -133,8 +162,9 @@ public class WarcLoader extends FileInputLoadFunc implements LoadMetadata {
 			}
 			List<Object> protoTuple = Lists.newArrayList();
 			protoTuple.add(url);
-			protoTuple.add(date);
-			protoTuple.add(type);
+			protoTuple.add(ipaddress);
+//			protoTuple.add(date);
+//			protoTuple.add(type);
 
 			protoTuple.add(leafpathStr.toString());
 
@@ -172,8 +202,9 @@ public class WarcLoader extends FileInputLoadFunc implements LoadMetadata {
 
 		Schema schema = new Schema();
 		schema.add(new FieldSchema("url", DataType.CHARARRAY));
-		schema.add(new FieldSchema("date", DataType.CHARARRAY));
-		schema.add(new FieldSchema("mime", DataType.CHARARRAY));
+		schema.add(new FieldSchema("ipaddress",DataType.CHARARRAY));
+//		schema.add(new FieldSchema("date", DataType.CHARARRAY));
+//		schema.add(new FieldSchema("mime", DataType.CHARARRAY));
 		schema.add(new FieldSchema("leafpathstr", DataType.CHARARRAY));
 		
 		

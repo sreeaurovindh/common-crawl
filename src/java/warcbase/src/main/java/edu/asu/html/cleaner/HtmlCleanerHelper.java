@@ -1,6 +1,9 @@
 package edu.asu.html.cleaner;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -27,8 +30,10 @@ import org.w3c.dom.traversal.NodeIterator;
 import org.xml.sax.InputSource;
 
 public class HtmlCleanerHelper {
-
+ 
 	public static void main(String[] args) {
+		
+		
 		String sample = "HTTP/1.1 200 OK\n"
 				+ "Date: Fri, 22 May 2015 08:35:18 GMT\n"
 				+ "Server: Apache/2.2.22 (Ubuntu)\n"
@@ -331,6 +336,7 @@ public class HtmlCleanerHelper {
 		// cleanHtml(sample);
 
 	}
+ 
 
 	public static ArrayList<String> cleanHtml(String rawHtmlFile) {
 		HashSet<String> visualElements = new HashSet<String>(Arrays.asList("a",
@@ -347,14 +353,21 @@ public class HtmlCleanerHelper {
 			CleanerProperties props = cleaner.getProperties();
 			props.setAllowHtmlInsideAttributes(true);
 			props.setAllowMultiWordAttributes(true);
-			props.setRecognizeUnicodeChars(true);
+			props.setRecognizeUnicodeChars(false);
 			props.setOmitComments(true);
+			props.setPruneTags("script,style,CDATA");
+			props.setAdvancedXmlEscape(true);
+			props.setTransResCharsToNCR(true);
+			props.setCharset("ISO-8859-1");
+			 
+			
 			ArrayList<String> xPaths = new ArrayList<String>();
 
-			try {
+			try { 
 				node = cleaner.clean(onlyHtml);
 				String xmlContent = new PrettyXmlSerializer(props).getAsString(
-						node, "utf-8");
+						node, "UTF-8");
+ 
 				xPaths = getXpathElements(xmlContent);
 
 				// remove duplicates if any
@@ -406,9 +419,14 @@ public class HtmlCleanerHelper {
 						xPathNodes.add(res);
 				}
 			}
-
+		 
 		} catch (Exception e) {
-			e.printStackTrace();
+			 
+		
+			 
+			
+
+//			e.printStackTrace();
 		}
 		return xPathNodes;
 	}

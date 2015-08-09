@@ -147,7 +147,7 @@ public class WarcLoader extends FileInputLoadFunc implements LoadMetadata {
 			boolean firstElement = true;
 			if (type!=null && type.contains("text/html")) {
 				ArrayList<String> xPathTags = HtmlCleanerHelper
-						.cleanHtml(new String(content));
+						.cleanHtml(new String(content,"ISO-8859-1"));
 				for (String xpathLeafElement : xPathTags) {
 					if(!firstElement){
 						leafpathStr.append("|");

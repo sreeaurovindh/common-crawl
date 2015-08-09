@@ -5,8 +5,8 @@ import numpy as np
 import time as tm
  
 # Enter your AWS credentials
-aws_key = "AKIAI4BVSKH5LVTR5VTA"
-aws_secret = "cuKn897WgN4aIWsdUff6Nk1GhOcr1EHO2BBiJSsM"
+aws_key = ""
+aws_secret = ""
 
 # Details of instance & time range you want to find spot prices for
 instanceType = 'c3.large'

@@ -15,7 +15,9 @@ Credits
 
 Idea credits : http://research.microsoft.com/en-us/projects/website_structure_mining/ 
 
-Data Credits : Common Crawl http://commoncrawl.org/ 
+Web archive data Credits : Common Crawl http://commoncrawl.org/
+
+IP - GeoLocation Databases : http://dev.maxmind.com/geoip/legacy/geolite/#IP_Geolocation 
 
 Warc Extractor (Forked from here and followed with additions) : https://github.com/lintool/warcbase  
 
@@ -23,3 +25,6 @@ Disclaimer
 ---------
 
 The views and opinions expressed in this article are those of the authors and do not necessarily reflect the official policy or work in progress of any company such as microsoft or common crawl. Examples of analysis performed within this article are only examples. They should not be utilized in real-world analytic products as they are based only on very limited and dated open source information.
+
+This product includes GeoLite data created by MaxMind, available from 
+<a href="http://www.maxmind.com">http://www.maxmind.com</a>.

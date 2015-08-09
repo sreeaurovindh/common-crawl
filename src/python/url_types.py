@@ -3,7 +3,7 @@ import glob
 import json
 import re
 
-dir_loc = '/home/sree/Projects/common-crawl/data/indeed-2014-52/*'
+dir_loc = '/home/sree/Projects/common-crawl/data/simplyhired-CC-MAIN-2015-06/*'
 output_loc  = '/home/sree/Projects/common-crawl/data/exploreds/'
 tld_dict = dict()
 dom_dict = dict()
